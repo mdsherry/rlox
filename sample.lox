@@ -1,0 +1,55 @@
+for(var i = 0; i < 10; i = i + 1) {
+  print i;
+}
+while i > 0 {
+  i = i - 1;
+  print i;
+}
+
+fun say_hi(name) {
+  var msg = "Hi, " + name;
+  print msg;
+  return "Bye " + name;
+}
+
+print say_hi("Mark");
+
+fun greeter(message_maker) {
+  print "SOmething" + message_maker("Mark");
+}
+
+greeter(say_hi);
+var j = 1;
+fun counter() {
+  var i = 0;
+  fun return_count() {
+    i = i + 1;
+    j = j * 2;
+    var j = j * i;
+    return i + j;
+  }
+  var i = 16;
+  var j = 0;
+  return return_count;
+}
+
+var counterer = counter();
+print counterer();
+print counterer();
+print counterer();
+print j;
+
+class Cls {
+  init(name) {
+    this.name = name;
+  }
+  speak() {
+    print "Hello, " + this.name;
+  }
+}
+var inst = Cls("Mark");
+print inst.name;
+var speak  = inst.speak;
+speak();
+inst.foo = "bar";
+print inst.foo;
