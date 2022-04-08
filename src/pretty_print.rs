@@ -1,17 +1,28 @@
-use crate::grammar::{Op, While, Paren, Block, Assignment, Ident, Logical, LogicOp, Call, ClassDef, MethodDef, Dot};
+use string_interner::StringInterner;
+
+use crate::grammar::{
+    Assignment, Block, Call, ClassDef, Dot, Ident, LogicOp, Logical, MethodDef, Op, Paren, Super,
+    This, While,
+};
 
 use super::grammar::Visitor;
 
-pub struct PrettyPrint {
+pub struct PrettyPrint<'a> {
     pub buffer: String,
-    indent: usize
+    indent: usize,
+    string_table: &'a StringInterner,
 }
 
-impl PrettyPrint {
-    pub fn new() -> Self {
-        PrettyPrint { buffer: String::new(), indent: 0 }
+impl<'a> PrettyPrint<'a> {
+    #[allow(dead_code)]
+    pub fn new(string_table: &'a StringInterner) -> Self {
+        PrettyPrint {
+            buffer: String::new(),
+            indent: 0,
+            string_table,
+        }
     }
-    fn new_line(&mut self) {
+    pub fn new_line(&mut self) {
         self.buffer.push('\n');
         for _ in 0..self.indent {
             self.buffer.push(' ');
@@ -28,7 +39,6 @@ impl PrettyPrint {
             Op::Minus => self.buffer.push('-'),
             Op::Times => self.buffer.push('*'),
             Op::Div => self.buffer.push('/'),
-            Op::Dot => self.buffer.push('.'),
             Op::Not => self.buffer.push('!'),
             Op::EqEq => self.buffer.push_str("=="),
             Op::NotEq => self.buffer.push_str("!="),
@@ -40,14 +50,13 @@ impl PrettyPrint {
     }
 }
 
-impl Visitor for PrettyPrint {
-    type Value = ();
+impl<'a, 'b> Visitor<'b> for PrettyPrint<'a> {
+    type Value = bool;
     fn visit_assignment(&mut self, node: &Assignment) -> Self::Value {
         node.lvalue.accept(self);
         self.buffer.push_str(" = ");
         node.rvalue.accept(self);
-        self.buffer.push(';');
-        self.new_line();
+        true
     }
     fn visit_if(&mut self, node: &crate::grammar::If) -> Self::Value {
         self.buffer.push_str("if (");
@@ -64,28 +73,25 @@ impl Visitor for PrettyPrint {
         if let Some(elseif) = &node.elseif {
             self.buffer.push_str(" else ");
             elseif.accept(self);
-        } else {
-            self.buffer.push(';');
         }
-        self.new_line();
+        false
     }
 
     fn visit_return(&mut self, node: &crate::grammar::Return) -> Self::Value {
         self.buffer.push_str("return ");
         node.expr.accept(self);
-        self.buffer.push(';');
-        self.new_line();
+        true
     }
 
     fn visit_var_def(&mut self, node: &crate::grammar::VarDef) -> Self::Value {
         self.buffer.push_str("var ");
-        self.buffer.push_str(&node.name.name);
+        self.buffer
+            .push_str(self.string_table.resolve(node.name.name).unwrap());
         if let Some(init_value) = &node.initial_value {
             self.buffer.push_str(" = ");
             init_value.accept(self);
         }
-        self.buffer.push(';');
-        self.new_line();
+        true
     }
 
     fn visit_bin_op(&mut self, node: &crate::grammar::BinOp) -> Self::Value {
@@ -94,109 +100,118 @@ impl Visitor for PrettyPrint {
         self.print_op(node.op);
         self.buffer.push(' ');
         node.right.accept(self);
+        true
     }
 
     fn visit_paren(&mut self, node: &Paren) -> Self::Value {
         self.buffer.push('(');
         node.expr.accept(self);
         self.buffer.push(')');
+        true
     }
 
     fn visit_unary_op(&mut self, node: &crate::grammar::UnaryOp) -> Self::Value {
         self.print_op(node.op);
         node.expr.accept(self);
+        true
     }
 
     fn visit_string(&mut self, node: &crate::grammar::Str) -> Self::Value {
         // TODO: Escaping
         self.buffer.push_str(&format!("\"{}\"", node.value));
+        true
     }
 
     fn visit_number(&mut self, node: &crate::grammar::Number) -> Self::Value {
         self.buffer.push_str(&format!("{}", node.value));
+        true
     }
 
     fn visit_print(&mut self, node: &crate::grammar::Print) -> Self::Value {
         self.buffer.push_str("print ");
         node.expr.accept(self);
-        self.buffer.push(';');
-        self.new_line();
+        true
     }
 
     fn visit_fun_def(&mut self, node: &crate::grammar::FunDef) -> Self::Value {
         self.buffer.push_str("fun ");
-        self.buffer.push_str(&node.name.name);
+        self.buffer
+            .push_str(self.string_table.resolve(node.name.name).unwrap());
         self.buffer.push('(');
-        self.buffer.push_str(") {");
-        self.indented(|this| {
-            this.new_line();
-            for stmt in &node.body.stmts {
-                stmt.accept(this);
-            }
-        });
-        self.buffer.push('}');
+        self.buffer.push_str(") ");
+        node.body.accept(self);
+
         self.new_line();
+        false
     }
 
     fn visit_bool(&mut self, node: &crate::grammar::Bool) -> Self::Value {
-        if node.value { 
+        if node.value {
             self.buffer.push_str("true");
         } else {
             self.buffer.push_str("false");
         }
+        true
     }
 
     fn visit_nil(&mut self, _node: &crate::grammar::Nil) -> Self::Value {
         self.buffer.push_str("nil");
+        true
     }
 
     fn visit_for(&mut self, node: &crate::grammar::For) -> Self::Value {
         self.buffer.push_str("for (");
         if let Some(n) = node.init.as_ref() {
             n.accept(self);
-        } 
+        }
         self.buffer.push(';');
         if let Some(n) = node.cond.as_ref() {
             self.buffer.push(' ');
-            n.accept(self)
+            n.accept(self);
         };
         self.buffer.push(';');
         if let Some(n) = node.iter.as_ref() {
             self.buffer.push(' ');
-            n.accept(self)
+            n.accept(self);
         };
         self.buffer.push_str(") {");
-        self.indented(|this| 
+        self.indented(|this| {
             for stmt in &node.body.stmts {
                 stmt.accept(this);
             }
-        );
+        });
         self.buffer.push('}');
-        self.new_line()
+        false
     }
 
-    fn visit_while(&mut self, node: &While) {
+    fn visit_while(&mut self, node: &While) -> Self::Value {
         self.buffer.push_str("while ");
         node.cond.accept(self);
         self.buffer.push(' ');
         node.body.accept(self);
-        self.new_line()
+        false
     }
-    fn visit_block(&mut self, node: &Block) {
+    fn visit_block(&mut self, node: &Block) -> Self::Value {
         self.buffer.push('{');
-        self.indented(|this| 
+        self.indented(|this| {
             for stmt in &node.stmts {
-                stmt.accept(this);
+                this.new_line();
+                if stmt.accept(this) {
+                    this.buffer.push(';');
+                }
             }
-        );
+        });
+        self.new_line();
         self.buffer.push('}');
+        false
     }
-        
 
     fn visit_ident(&mut self, node: &Ident) -> Self::Value {
-        self.buffer.push_str(&node.name);
+        self.buffer
+            .push_str(self.string_table.resolve(node.name).unwrap());
+        true
     }
-    
+
     fn visit_logical(&mut self, node: &Logical) -> Self::Value {
         node.left.accept(self);
         self.buffer.push_str(match node.op {
@@ -204,6 +219,7 @@ impl Visitor for PrettyPrint {
             LogicOp::Or => " or ",
         });
         node.right.accept(self);
+        true
     }
 
     fn visit_call(&mut self, node: &Call) -> Self::Value {
@@ -216,6 +232,7 @@ impl Visitor for PrettyPrint {
             param.accept(self);
         }
         self.buffer.push(')');
+        true
     }
 
     fn visit_class(&mut self, node: &ClassDef) -> Self::Value {
@@ -231,8 +248,10 @@ impl Visitor for PrettyPrint {
                 method.accept(this);
             }
         });
-        self.buffer.push_str("}");
         self.new_line();
+        self.buffer.push('}');
+        self.new_line();
+        false
     }
 
     fn visit_method(&mut self, node: &MethodDef) -> Self::Value {
@@ -247,11 +266,24 @@ impl Visitor for PrettyPrint {
         }
         self.buffer.push_str(") ");
         node.body.accept(self);
+        false
     }
 
     fn visit_dot(&mut self, node: &Dot) -> Self::Value {
         node.left.accept(self);
         self.buffer.push('.');
         node.right.accept(self);
+        true
+    }
+
+    fn visit_this(&mut self, _node: &This) -> Self::Value {
+        self.buffer.push_str("this");
+        true
+    }
+
+    fn visit_super(&mut self, node: &Super) -> Self::Value {
+        self.buffer.push_str("super.");
+        node.field.accept(self);
+        true
     }
 }

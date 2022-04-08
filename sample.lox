@@ -1,55 +1,111 @@
-for(var i = 0; i < 10; i = i + 1) {
-  print i;
-}
-while i > 0 {
-  i = i - 1;
-  print i;
-}
+// // print 1 + 2 * 3;
+// // if 1 < 2 {
+// //   print "Less";
+// // } else {
+// //   print "Greater";
+// // }
+// // for(var i = 0; i < 10; i = i + 1) {
+// //   print i;
+// // }
+// // while i > 0 {
+// //   i = i - 1;
+// //   print i;
+// // }
+// // var k = 1 + 2;
 
-fun say_hi(name) {
-  var msg = "Hi, " + name;
-  print msg;
-  return "Bye " + name;
-}
+// // fun say_hi(name) {
+// //   var msg = "Hi, " + name;
+// //   print msg;
+// //   return "Bye " + name;
+// // }
 
-print say_hi("Mark");
+// // print say_hi("Mark");
 
-fun greeter(message_maker) {
-  print "SOmething" + message_maker("Mark");
-}
+// // fun greeter(message_maker) {
+// //   print "SOmething" + message_maker("Mark");
+// // }
+// // var fn; { var i = 0; fun hi() { i = i + 1; print i; } fn = hi; print i; hi(); print i; } fn();
+// // greeter(say_hi);
+// // var j = 1;
+// // fun counter() {
+// //   var i = 0;
+// //   fun return_count() {
+// //     i = i + 1;
+// //     j = j * 2;
+// //     var j = j * i;
+// //     return i + j;
+// //   }
+// //   var i = 16;
+// //   var j = 0;
+// //   return return_count;
+// // }
+// // print counter;
+// // var counterer = counter();
+// // print counterer();
+// // print counterer();
+// // print counterer();
+// // print j;
 
-greeter(say_hi);
-var j = 1;
-fun counter() {
-  var i = 0;
-  fun return_count() {
-    i = i + 1;
-    j = j * 2;
-    var j = j * i;
-    return i + j;
-  }
-  var i = 16;
-  var j = 0;
-  return return_count;
-}
+// class Cls {
+//   init(name) {
+//     print name;
+//     this.name = name;
+//     print this.name;
+//   }
+//   speak() {
+//     print "Hello, " + this.name;
+//   }
+// }
 
-var counterer = counter();
-print counterer();
-print counterer();
-print counterer();
-print j;
+// var inst = Cls("Mark");
+// print Cls("Doug");
+// print inst;
+// print inst.name;
+// var speak  = inst.speak;
+// speak();
+// inst.foo = "bar";
+// print inst.foo;
 
-class Cls {
-  init(name) {
-    this.name = name;
-  }
+class A {
   speak() {
-    print "Hello, " + this.name;
+    print "Fee";
   }
 }
-var inst = Cls("Mark");
-print inst.name;
-var speak  = inst.speak;
-speak();
-inst.foo = "bar";
-print inst.foo;
+print A;
+class B < A{
+  speak() {
+    super.speak();
+    print "Fi";
+  }
+}
+A = nil;
+class C < B {
+  speak() {
+    super.speak();
+    print "Fo";
+  }
+}
+B = nil;
+class D < C {
+  speak() {
+    super.speak();
+    print "Fum";
+  }
+}
+C = nil;
+var giant = D();
+D = nil;
+print giant;
+giant.speak();
+giant = nil;
+// fun fib(n) {
+//   if (n < 2)
+//   { return n;
+//   }
+//   return fib(n - 1) + fib(n - 2); 
+// }
+
+// var before = clock();
+// print fib(36);
+// var after = clock();
+// print after - before;

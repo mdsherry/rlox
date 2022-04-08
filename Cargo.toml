@@ -1,0 +1,11 @@
+[package]
+name = "rlox"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+miette = { version = "4.3.0", features = ["fancy"] }
+string-interner = "0.14.0"
+thiserror = "1.0.30"

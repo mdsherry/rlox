@@ -1,0 +1,41 @@
+#[derive(Debug)]
+pub enum Ops {
+    Return = 0,
+    LoadConst,
+    Pop,
+    Dup,
+    Load0,
+    Load1,
+    LoadTrue,
+    LoadFalse,
+    LoadNil,
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Not,
+    Uminus,
+    Lt,
+    Le,
+    Gt,
+    Ge,
+    Eq,
+    Neq,
+    Call,
+    Print, // 1 byte; -> value <- {}
+    Jump,
+    Branch,
+    NewGlobal,
+    LoadGlobal,
+    LoadGlobalPtr,
+    StoreGlobal,
+    StoreGlobalPtr,
+    LoadStack,
+    StoreStack,
+    DefineFn,
+    DefineClass, // 2 byte (method count); -> superclass, ident, method, ident, method, ... <- ptr
+    GetProp,     // 1 byte; -> obj, ident <- value
+    SetProp,     // 1 byte; -> value, obj, ident <- {}
+    MakeSuper,
+    Unknown,
+}

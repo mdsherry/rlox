@@ -2,17 +2,16 @@ use std::collections::HashSet;
 
 use crate::grammar::*;
 
-pub struct LocalIdents {
-}
+pub struct LocalIdents {}
 
 impl LocalIdents {
     pub fn new() -> Self {
-        LocalIdents {  }
+        LocalIdents {}
     }
 }
 
-impl Visitor for LocalIdents {
-    type Value = HashSet<String>;
+impl<'b> Visitor<'b> for LocalIdents {
+    type Value = HashSet<StrSymbol>;
 
     fn visit_if(&mut self, node: &crate::grammar::If) -> Self::Value {
         let mut rv = HashSet::new();
@@ -103,7 +102,7 @@ impl Visitor for LocalIdents {
 
     fn visit_ident(&mut self, node: &crate::grammar::Ident) -> Self::Value {
         let mut rv = HashSet::new();
-        rv.insert(node.name.clone());
+        rv.insert(node.name);
         rv
     }
 
@@ -143,5 +142,13 @@ impl Visitor for LocalIdents {
 
     fn visit_dot(&mut self, node: &Dot) -> Self::Value {
         node.left.accept(self)
+    }
+
+    fn visit_this(&mut self, _node: &This) -> Self::Value {
+        HashSet::new()
+    }
+
+    fn visit_super(&mut self, _node: &Super) -> Self::Value {
+        HashSet::new()
     }
 }
